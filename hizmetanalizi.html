@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hizmet Analizi</title>
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ff 100%);
+        }
+
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 30px;
+            perspective: 1000px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.12);
+        }
+
+        .service-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        /* Service icon styles güncellendi */
+        .service-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .service-icon i {
+            background: linear-gradient(135deg, #3498db, #1abc9c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+        }
+
+        /* Service card hover effect for icons */
+        .service-card:hover .service-icon i {
+            background: linear-gradient(135deg, #2980b9, #16a085);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* İstatistik grafikleri container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px;
+            perspective: 1000px;
+        }
+
+        .chart-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .chart-box:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        /* Animasyonlar */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Metriks kartları */
+        .metrics-row {
+            display: flex;
+            gap: 20px;
+            margin: 30px;
+            flex-wrap: wrap;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 20px;
+            border-radius: 15px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255,255,255,0.4);
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .metric-card h4 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Metric value styles güncellendi */
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3498db, #1abc9c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Responsive tasarım */
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            .metrics-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ARCANUS</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard" style="text-decoration: none; color: inherit;"><i class="fas fa-home"></i> Genel Bakış</a></li>
+                <li><a href="/odalar" style="text-decoration: none; color: inherit;"><i class="fas fa-bed"></i> Odalar</a></li>
+                <li><a href="/misafirler" style="text-decoration: none; color: inherit;"><i class="fas fa-users"></i> Misafirler</a></li>
+                <li><a href="/hizmet-analizi" style="text-decoration: none; color: inherit;"><i class="fas fa-chart-bar"></i> Hizmet Analizi</a></li>
+            </ul>
+        </nav>
+        
+        <main class="main-content">
+            <header>
+                <div class="search-bar">
+                    <input type="search" placeholder="Ara...">
+                </div>
+                <div class="user-profile">
+                    <span>Yönetici</span>
+                </div>
+            </header>
+
+            <div class="metrics-row">
+                <div class="metric-card" style="animation-delay: 0.1s">
+                    <h4>Toplam Hizmet Puanı</h4>
+                    <div class="metric-value">4.8/5.0</div>
+                </div>
+                <div class="metric-card" style="animation-delay: 0.2s">
+                    <h4>Günlük Ortalama</h4>
+                    <div class="metric-value">470</div>
+                </div>
+                <div class="metric-card" style="animation-delay: 0.3s">
+                    <h4>Memnuniyet Oranı</h4>
+                    <div class="metric-value">91.5%</div>
+                </div>
+                <div class="metric-card" style="animation-delay: 0.4s">
+                    <h4>Aktif Hizmetler</h4>
+                    <div class="metric-value">12/14</div>
+                </div>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h3>Restoran Hizmetleri</h3>
+                    <p>Günlük müşteri: 150</p>
+                    <p>Memnuniyet: %92</p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-spa"></i>
+                    </div>
+                    <h3>SPA & Wellness</h3>
+                    <p>Günlük ziyaretçi: 45</p>
+                    <p>Memnuniyet: %88</p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-swimming-pool"></i>
+                    </div>
+                    <h3>Havuz & Plaj</h3>
+                    <p>Günlük kullanım: 200</p>
+                    <p>Memnuniyet: %95</p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-concierge-bell"></i>
+                    </div>
+                    <h3>Oda Servisi</h3>
+                    <p>Günlük sipariş: 75</p>
+                    <p>Memnuniyet: %90</p>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div style="margin-bottom: 20px;">
+                        <select id="serviceMonthSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="">Ay Seçiniz</option>
+                        </select>
+                    </div>
+                    <canvas id="serviceUsageChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="satisfactionChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        
+        Chart.defaults.font.family = "'Segoe UI', sans-serif";
+        Chart.defaults.color = '#666';
+
+        let serviceChart = null;
+
+        
+        async function fetchServiceData(selectedMonth) {
+            try {
+                const response = await fetch(`/api/hizmetler/${selectedMonth}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Hizmet verileri çekilemedi:', error);
+                return [];
+            }
+        }
+
+        
+        async function updateServiceChart(selectedMonth) {
+            const serviceData = await fetchServiceData(selectedMonth);
+            const ctx = document.getElementById('serviceUsageChart').getContext('2d');
+            
+            if (serviceChart) {
+                serviceChart.destroy();
+            }
+
+            serviceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: serviceData.map(item => item.hizmet_adi),
+                    datasets: [{
+                        label: 'Günlük Kullanım',
+                        data: serviceData.map(item => item.kullanim_sayisi),
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(26, 188, 156, 0.7)',
+                            'rgba(155, 89, 182, 0.7)',
+                            'rgba(52, 73, 94, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(26, 188, 156, 1)',
+                            'rgba(155, 89, 182, 1)',
+                            'rgba(52, 73, 94, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    animation: {
+                        duration: 1500,
+                        easing: 'linear'
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${selectedMonth}. Ay Hizmet Kullanım İstatistikleri`,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        
+        async function loadServiceMonths() {
+            try {
+                const response = await fetch('/api/hizmet-aylari');
+                const months = await response.json();
+                const monthSelect = document.getElementById('serviceMonthSelect');
+                
+                months.forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month.ay_id;
+                    option.textContent = `${month.ay_id}. Ay`;
+                    monthSelect.appendChild(option);
+                });
+
+                if (months.length > 0) {
+                    monthSelect.value = months[0].ay_id;
+                    await updateServiceChart(months[0].ay_id);
+                }
+            } catch (error) {
+                console.error('Ay listesi yüklenemedi:', error);
+            }
+        }
+
+        
+        document.getElementById('serviceMonthSelect').addEventListener('change', async (e) => {
+            if (e.target.value) {
+                await updateServiceChart(e.target.value);
+            }
+        });
+
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadServiceMonths();
+            // Animasyon için elementleri sırayla göster
+            const cards = document.querySelectorAll('.service-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.style.animation = 'slideUp 0.5s ease-out forwards';
+            });
+
+            const chartBoxes = document.querySelectorAll('.chart-box');
+            chartBoxes.forEach((box, index) => {
+                box.style.animationDelay = `${(index + cards.length) * 0.1}s`;
+            });
+        });
+
+        // Memnuniyet Grafiği
+        const satisfactionCtx = document.getElementById('satisfactionChart').getContext('2d');
+        new Chart(satisfactionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Restoran', 'SPA', 'Havuz', 'Oda Servisi'],
+                datasets: [{
+                    data: [92, 88, 95, 90],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(26, 188, 156, 0.8)',
+                        'rgba(155, 89, 182, 0.8)',
+                        'rgba(52, 73, 94, 0.8)'
+                    ],
+                    borderColor: 'white',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 1500
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Hizmet Memnuniyet Oranları (%)',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

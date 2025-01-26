@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oda Düzeni Analizi</title>
+    <link rel="stylesheet" href="styles/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ARCANUS</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard" style="text-decoration: none; color: inherit;"><i class="fas fa-home"></i> Genel Bakış</a></li>
+                <li><a href="/odalar" style="text-decoration: none; color: inherit;"><i class="fas fa-bed"></i> Odalar</a></li>
+                <li><a href="/misafirler" style="text-decoration: none; color: inherit;"><i class="fas fa-users"></i> Misafirler</a></li>
+                <li><a href="/hizmet-analizi" style="text-decoration: none; color: inherit;"><i class="fas fa-chart-bar"></i> Hizmet Analizi</a></li>
+            </ul>
+        </nav>
+        
+        <main class="main-content">
+            <header>
+                <div class="search-bar">
+                    <input type="search" placeholder="Ara...">
+                </div>
+                <div class="user-profile">
+                    <span>Yönetici</span>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e3f2fd;">
+                        <i class="fas fa-door-open" style="color: #1976d2"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>Standart Oda Doluluk</h3>
+                        <p class="stat-number">85%</p>
+                        <span class="stat-change positive">Yüksek Sezon</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #e8f5e9;">
+                        <i class="fas fa-home" style="color: #388e3c"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>Aile Odası Doluluk</h3>
+                        <p class="stat-number">92%</p>
+                        <span class="stat-change positive">En Çok Tercih Edilen</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fff3e0;">
+                        <i class="fas fa-star" style="color: #f57c00"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>Süit Oda Doluluk</h3>
+                        <p class="stat-number">65%</p>
+                        <span class="stat-change negative">Düşük Sezon</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fce4ec;">
+                        <i class="fas fa-chart-line" style="color: #c2185b"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>Optimize Edilebilir</h3>
+                        <p class="stat-number">15 Oda</p>
+                        <span class="stat-change neutral">Dönüşüm Önerisi</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Oda Tipi Doluluk Trendi (Aylık)</h3>
+                    <canvas id="roomTypeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Sezonsal Doluluk Analizi</h3>
+                    <canvas id="seasonalChart"></canvas>
+                </div>
+            </div>
+
+            <div class="recommendation-section">
+                <h3>Oda Düzeni Önerileri</h3>
+                <div class="recommendation-cards">
+                    <div class="recommendation-card">
+                        <h4>Yüksek Sezon (Haziran-Ağustos)</h4>
+                        <ul id="highSeasonRecommendations">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </ul>
+                    </div>
+                    <div class="recommendation-card">
+                        <h4>Düşük Sezon (Kasım-Mart)</h4>
+                        <ul id="lowSeasonRecommendations">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Oda tipi doluluk trendi grafiği
+            const roomTypeCtx = document.getElementById('roomTypeChart').getContext('2d');
+            new Chart(roomTypeCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+                    datasets: [{
+                        label: 'Standart Oda',
+                        data: [65, 60, 70, 75, 80, 90, 95, 95, 85, 75, 65, 60],
+                        borderColor: '#1976d2',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Aile Odası',
+                        data: [70, 65, 75, 85, 90, 95, 98, 98, 90, 80, 70, 65],
+                        borderColor: '#388e3c',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Süit',
+                        data: [50, 45, 55, 60, 70, 80, 85, 85, 75, 65, 55, 50],
+                        borderColor: '#f57c00',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Sezonsal analiz grafiği - API'den veri çekme
+            async function updateSeasonalChart() {
+                try {
+                    const response = await fetch('/api/sezonsal-doluluk');
+                    const data = await response.json();
+
+                    const seasonalCtx = document.getElementById('seasonalChart').getContext('2d');
+                    new Chart(seasonalCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(item => item.mevsim_adi),
+                            datasets: [{
+                                label: 'Ortalama Doluluk Oranı (%)',
+                                data: data.map(item => item.doluluk_orani),
+                                backgroundColor: [
+                                    '#90caf9', // Kış
+                                    '#a5d6a7', // İlkbahar
+                                    '#ffcc80', // Yaz
+                                    '#ef9a9a'  // Sonbahar
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Sezonsal doluluk verileri yüklenirken hata:', error);
+                }
+            }
+
+            // Grafiği güncelle
+            updateSeasonalChart();
+
+            // Önerileri doldur
+            const highSeasonRecs = document.getElementById('highSeasonRecommendations');
+            const lowSeasonRecs = document.getElementById('lowSeasonRecommendations');
+
+            highSeasonRecs.innerHTML = `
+                <li>Aile odası sayısı %20 artırılmalı</li>
+                <li>10 standart oda, aile odasına dönüştürülmeli</li>
+                <li>Süit odaların 5'i ikiz aile odasına çevrilebilir</li>
+            `;
+
+            lowSeasonRecs.innerHTML = `
+                <li>Süit odalar özel kampanyalarla değerlendirilmeli</li>
+                <li>Düşük sezonda bakım/yenileme planlanmalı</li>
+                <li>Kongre/toplantı paketleri ile doluluk artırılmalı</li>
+            `;
+
+            // Set active link based on current page
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-links li');
+            
+            navLinks.forEach(link => {
+                const anchor = link.querySelector('a');
+                if (anchor.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
